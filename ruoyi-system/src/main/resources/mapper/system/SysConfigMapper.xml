@@ -42,21 +42,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectConfigVo"/>
         <where>
 			<if test="configName != null and configName != ''">
-				AND config_name like concat('%', #{configName}, '%')
+				AND config_name like '%' + #{configName} + '%'
 			</if>
 			<if test="configType != null and configType != ''">
 				AND config_type = #{configType}
 			</if>
 			<if test="configKey != null and configKey != ''">
-				AND config_key like concat('%', #{configKey}, '%')
+				AND config_key like '%' + #{configKey} + '%'
 			</if>
 			<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
-				and date_format(create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+				DATEDIFF(day, create_time , #{params.beginTime}) &lt;= 0
 			</if>
 			<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
-				and date_format(create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+				DATEDIFF(day, create_time , #{params.endTime}) &gt;= 0
 			</if>
 		</where>
+        order by config_id asc
     </select>
     
     <select id="selectConfigById" parameterType="Long" resultMap="SysConfigResult">
@@ -65,8 +66,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 	
     <select id="checkConfigKeyUnique" parameterType="String" resultMap="SysConfigResult">
-        <include refid="selectConfigVo"/>
-        where config_key = #{configKey} limit 1
+        select top 1 config_id, config_name, config_key, config_value, config_type, create_by, create_time, update_by, update_time, remark
+        from sys_config
+        where config_key = #{configKey}
     </select>
     
     <insert id="insertConfig" parameterType="SysConfig">
@@ -85,7 +87,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="configType != null and configType != ''">#{configType},</if>
 			<if test="createBy != null and createBy != ''">#{createBy},</if>
 			<if test="remark != null and remark != ''">#{remark},</if>
- 			sysdate()
+ 			getdate()
 		)
     </insert>
 	 
@@ -98,7 +100,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="configType != null and configType != ''">config_type = #{configType},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
             <if test="remark != null">remark = #{remark},</if>
- 			update_time = sysdate()
+ 			update_time = getdate()
         </set>
         where config_id = #{configId}
     </update>

@@ -62,47 +62,67 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<include refid="selectGenTableVo"/>
 		<where>
 			<if test="tableName != null and tableName != ''">
-				AND lower(table_name) like lower(concat('%', #{tableName}, '%'))
+				AND lower(table_name) like lower('%' + #{tableName} + '%')
 			</if>
 			<if test="tableComment != null and tableComment != ''">
-				AND lower(table_comment) like lower(concat('%', #{tableComment}, '%'))
+				AND lower(table_comment) like lower('%' + #{tableComment} + '%')
 			</if>
 			<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
-				AND date_format(create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+				DATEDIFF(day, create_time , #{params.beginTime}) &lt;= 0
 			</if>
 			<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
-				AND date_format(create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+				DATEDIFF(day, create_time , #{params.endTime}) &gt;= 0
 			</if>
 		</where>
+		order by table_id asc
 	</select>
 
 	<select id="selectDbTableList" parameterType="GenTable" resultMap="GenTableResult">
-		select table_name, table_comment, create_time, update_time from information_schema.tables
-		where table_schema = (select database())
-		AND table_name NOT LIKE 'qrtz_%' AND table_name NOT LIKE 'gen_%'
-		AND table_name NOT IN (select table_name from gen_table)
+		SELECT
+		so.name table_name,
+		sep.value table_comment,
+		so.create_date create_time,
+		so.modify_date update_time
+		FROM
+		sys.objects AS so
+		LEFT JOIN sys.extended_properties AS sep ON so.object_id = sep.major_id
+		WHERE
+		so.type = 'U'
+		AND sep.minor_id = 0
+		AND so.name NOT LIKE 'qrtz_%' AND so.name NOT LIKE 'gen_%'
+		AND so.name NOT IN (select table_name from gen_table)
 		<if test="tableName != null and tableName != ''">
-			AND lower(table_name) like lower(concat('%', #{tableName}, '%'))
+			AND lower(table_name) like lower('%' + #{tableName} + '%')
 		</if>
 		<if test="tableComment != null and tableComment != ''">
-			AND lower(table_comment) like lower(concat('%', #{tableComment}, '%'))
+			AND lower(table_comment) like lower('%' + #{tableComment} + '%')
 		</if>
 		<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
-			AND date_format(create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+			DATEDIFF(day, create_time , #{params.beginTime}) &lt;= 0
 		</if>
 		<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
-			AND date_format(create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+			DATEDIFF(day, create_time , #{params.endTime}) &gt;= 0
 		</if>
         order by create_time desc
 	</select>
 	
 	<select id="selectDbTableListByNames" resultMap="GenTableResult">
-		select table_name, table_comment, create_time, update_time from information_schema.tables
-		where table_name NOT LIKE 'qrtz_%' and table_name NOT LIKE 'gen_%' and table_schema = (select database())
-		and table_name in
-	    <foreach collection="array" item="name" open="(" separator="," close=")">
- 			#{name}
-        </foreach> 
+		SELECT
+		SO.name table_name,
+		SEP.VALUE table_comment,
+		SO.create_date create_time,
+		SO.modify_date update_time
+		FROM
+		sys.objects AS SO
+		LEFT JOIN sys.extended_properties AS SEP ON SO.object_id = SEP.major_id
+		WHERE
+		SO.type = 'U'
+		AND SEP.minor_id = 0
+		and SO.name NOT LIKE 'qrtz_%' and SO.name NOT LIKE 'gen_%'
+		and SO.name in
+		<foreach collection="array" item="name" open="(" separator="," close=")">
+			#{name}
+		</foreach>
 	</select>
 	
 	<select id="selectTableByName" parameterType="String" resultMap="GenTableResult">
@@ -167,7 +187,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="genPath != null and genPath != ''">#{genPath},</if>
 			<if test="remark != null and remark != ''">#{remark},</if>
  			<if test="createBy != null and createBy != ''">#{createBy},</if>
-			sysdate()
+			getdate()
          )
     </insert>
     
@@ -195,7 +215,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="options != null and options != ''">options = #{options},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
             <if test="remark != null">remark = #{remark},</if>
-            update_time = sysdate()
+            update_time = getdate()
         </set>
         where table_id = #{tableId}
     </update>
