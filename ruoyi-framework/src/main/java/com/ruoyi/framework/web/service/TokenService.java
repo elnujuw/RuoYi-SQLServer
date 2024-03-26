@@ -228,4 +228,25 @@ public class TokenService
     {
         return CacheConstants.LOGIN_TOKEN_KEY + uuid;
     }
+
+    /**
+     * 通过token获取用户身份信息
+     * @param token
+     * @return
+     */
+    public LoginUser getLoginUser(String token) {
+        if (StringUtils.isNotEmpty(token)) {
+            if (token.startsWith(Constants.TOKEN_PREFIX)) {
+                token = token.replace(Constants.TOKEN_PREFIX, "");
+            }
+            try {
+                Claims claims = parseToken(token);
+                String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
+                String userKey = getTokenKey(uuid);
+                LoginUser user = redisCache.getCacheObject(userKey);
+                return user;
+            } catch (Exception e) {}
+        }
+        return null;
+    }
 }

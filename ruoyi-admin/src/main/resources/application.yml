@@ -72,7 +72,7 @@ spring:
     # 端口，默认为6379
     port: 6379
     # 数据库索引
-    database: 0
+    database: 2
     # 密码
     password:
     # 连接超时时间
@@ -127,3 +127,16 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+minidao :
+  base-package: org.jeecg.modules.jmreport.desreport.dao*
+  db-type: sqlserver
+
+jeecg:
+  jmreport:
+    customPrePath: /dev-api
+    printPaper:
+      - title: A5纸横
+        size:
+          - 148
+          - 210
