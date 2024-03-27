@@ -92,18 +92,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		AND so.name NOT LIKE 'qrtz_%' AND so.name NOT LIKE 'gen_%'
 		AND so.name NOT IN (select table_name from gen_table)
 		<if test="tableName != null and tableName != ''">
-			AND lower(table_name) like lower('%' + #{tableName} + '%')
+			AND lower(so.name) like lower('%' + #{tableName} + '%')
 		</if>
 		<if test="tableComment != null and tableComment != ''">
-			AND lower(table_comment) like lower('%' + #{tableComment} + '%')
+			AND lower(sep.value) like lower('%' + #{tableComment} + '%')
 		</if>
 		<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
-			DATEDIFF(day, create_time , #{params.beginTime}) &lt;= 0
+			DATEDIFF(day, so.create_date , #{params.beginTime}) &lt;= 0
 		</if>
 		<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
-			DATEDIFF(day, create_time , #{params.endTime}) &gt;= 0
+			DATEDIFF(day, so.create_date , #{params.endTime}) &gt;= 0
 		</if>
-        order by create_time desc
+        order by so.create_date desc
 	</select>
 	
 	<select id="selectDbTableListByNames" resultMap="GenTableResult">
